@@ -9,12 +9,12 @@
 '2010 24 REB's were used, and we will record from each of these
 'over a uniform soil surface.
 
-'In addition we will windspeed from a sonic anemometer, so 
+'In addition we will record windspeed from a sonic anemometer, so 
 'that the bias correction can be adjusted for windspeed.
 ' see Cambell Scientific Q-7.1 Net Radiometer manual
 ' http://www.campbellsci.com/q7_1-l
 
-'Declare Public Variables ######################################
+'Declare Public Variables ##############################################
 Public PTemp, BattV
 
 Public RN(24)
@@ -56,7 +56,7 @@ Units PTemp 	= C
 Units RN() 	= mV
 Units Wind()	= m/s
 
-'Data Table ####################################################
+'Data Table ############################################################
 DataTable (RnCAL,True,-1)
 	DataInterval (0,1440,min,10) ' Save Every 10 Minutes
 	Average (1,BattV,FP2, False)
@@ -65,7 +65,7 @@ DataTable (RnCAL,True,-1)
 	Average (3, Wind(), IEEE4, False)
 EndTable
 
-'Subroutines ###################################################
+'Subroutines ###########################################################
 Sub ReadDL
 	PanelTemp (PTemp,250)
 	Battery (BattV)
@@ -103,9 +103,9 @@ Sub ReadMux
 EndSub
 
 
-'Main Program ##################################################
+'Main Program ##########################################################
 BeginProg
-	Scan (30,Sec,0,0) 'Scan every 10 seconds
+	Scan (30,Sec,0,0) 'Scan every 30 seconds
 		
 		'Datalogger 
 		ReadDL
@@ -116,4 +116,3 @@ BeginProg
 		CallTable (RnCAL)
 	NextScan
 EndProg
-
