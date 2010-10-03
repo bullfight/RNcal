@@ -1,0 +1,119 @@
+'CR1000 Cambell Scientific Datalogger
+'10/1/2010
+'Patrick Schmitz
+'p.schmitz@gmail.com
+
+'This code is designed to record data from REB Q6 and Q7 
+'net radiometers for the purposes of producing new bias 
+'correction calibrations for the thermopiles.  In soyFACE season
+'2010 24 REB's were used, and we will record from each of these
+'over a uniform soil surface.
+
+'In addition we will windspeed from a sonic anemometer, so 
+'that the bias correction can be adjusted for windspeed.
+' see Cambell Scientific Q-7.1 Net Radiometer manual
+' http://www.campbellsci.com/q7_1-l
+
+'Declare Public Variables ######################################
+Public PTemp, BattV
+
+Public RN(24)
+	Alias RN(1) 	= Q04032 'Net Radiometer Serial Numbers
+	Alias RN(2) 	= Q03017
+	Alias RN(3) 	= Q04033
+	Alias RN(4) 	= Q03018
+	Alias RN(5) 	= sn91226
+	Alias RN(6) 	= Q01299
+	Alias RN(7) 	= sn91173
+	Alias RN(8) 	= Q98294
+	Alias RN(9) 	= Q04031
+	Alias RN(10) 	= Q01300
+	Alias RN(11) 	= sn91227
+	Alias RN(12) 	= Q98194
+	Alias RN(13) 	= Q04034
+	Alias RN(14) 	= sn91234
+	Alias RN(15) 	= sn92057
+	Alias RN(16) 	= Q03015
+	Alias RN(17) 	= sn91222
+	Alias RN(18) 	= sn91170
+	Alias RN(19) 	= sn91229
+	Alias RN(20) 	= sn91231
+	Alias RN(21) 	= Q03195
+	Alias RN(22) 	= sn91236
+	Alias RN(23) 	= sn91228
+	Alias RN(24) 	= Q03050
+
+
+Public Wind(3)
+	Alias Wind(1) 	= u
+	Alias Wind(2) 	= v
+	Alias Wind(3) 	= Windspeed
+
+Dim x
+
+Units BattV 	= Volts
+Units PTemp 	= C
+Units RN() 		= mV
+Units Wind()	= m/s
+
+'Data Table ####################################################
+DataTable (RnCAL,True,-1)
+	DataInterval (0,1440,min,10) ' Save Every 10 Minutes
+	Average (1,BattV,FP2, False)
+	Average (1,PTemp,FP2, False)
+	Average (24, RN(), IEEE4, False)
+	Average (3, Wind(), IEEE4, False)
+EndTable
+
+'Subroutines ###################################################
+Sub ReadDL
+	PanelTemp (PTemp,250)
+	Battery (BattV)
+
+	'DL CH 1-2
+	'Sonic Anemometer 
+	For x = 1 To 2
+		VoltDiff (Wind(x),1,mV2500C,1,True,0,_60Hz,0.08,-100)
+   Next
+  
+	Windspeed = SQR(u^2 + v^2)
+
+	'DL CH 3-7
+	'...
+
+EndSub
+
+Sub ReadMux	
+	PortSet(1,1) 'MUX on Res CH
+	Delay(0,150,mSec) 'Delay to Fix problem with mulitplexer
+		
+		'MUX CH 1-24
+		'Net Radiometers
+		For x = 1 To 24
+			PulsePort(2,10000) 'Switch mux CH with Clock CH
+			VoltDiff(RN(x),1,mV250C,8,True,0,_60Hz,1,0) 
+				'read MUX from DL Diff CH 8
+		Next
+		
+		'MUX CH 25-32
+		'...
+	
+	PortSet(1,0) 'MUX off
+	Delay(0,150,mSec)
+EndSub
+
+
+'Main Program ##################################################
+BeginProg
+	Scan (30,Sec,0,0) 'Scan every 10 seconds
+		
+		'Datalogger 
+		ReadDL
+   	
+		'Mux 
+		ReadMux
+		
+		CallTable (RnCAL)
+	NextScan
+EndProg
+
