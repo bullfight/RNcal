@@ -9,6 +9,10 @@
 '2010 24 REB's were used, and we will record from each of these
 'over a uniform soil surface.
 
+'These will be calibrated against two CNR2 Net Radiometers, these
+'contain two thermopiles, one for Longwave radiation, and the second for
+'short wave radiation
+
 'In addition we will record windspeed from a sonic anemometer, so 
 'that the bias correction can be adjusted for windspeed.
 ' see Cambell Scientific Q-7.1 Net Radiometer manual
@@ -16,6 +20,12 @@
 
 'Declare Public Variables ##############################################
 Public PTemp, BattV
+
+Public RN_ref(4)
+	Alias RN_ref(1)	= Long_1
+	Alias RN_ref(2) = Short_1
+	Alias RN_ref(3) = Long_2
+	Alias RN_ref(4) = Short_2	
 
 Public RN(24)
 	Alias RN(1) 	= Q04032 'Net Radiometer Serial Numbers
@@ -56,13 +66,24 @@ Units PTemp 	= C
 Units RN() 	= mV
 Units Wind()	= m/s
 
-'Data Table ############################################################
-DataTable (RnCAL,True,-1)
-	DataInterval (0,1440,min,10) ' Save Every 10 Minutes
+'Data Tables ###########################################################
+DataTable (RnCAL_sample,True,-1)
+	DataInterval (0,30,Sec,10) ' Save Sample Every 30 Seconds
+	Sample (1,BattV,FP2)
+	Sample (1,PTemp,FP2)
+	Sample (3, Wind(), IEEE4)
+	Sample (4, RN_ref(), IEEE4)
+	Sample (24, RN(), IEEE4)
+EndTable
+
+DataTable (RnCAL_AVG,True,-1)
+	DataInterval (0,10,min,10) ' Save Avg Every 10 Minutes
 	Average (1,BattV,FP2, False)
 	Average (1,PTemp,FP2, False)
-	Average (24, RN(), IEEE4, False)
 	Average (3, Wind(), IEEE4, False)
+	Average (4, RN_ref(), IEEE4, False)
+	Average (24, RN(), IEEE4, False)
+
 EndTable
 
 'Subroutines ###########################################################
@@ -72,13 +93,13 @@ Sub ReadDL
 
 	'DL CH 1-2
 	'Sonic Anemometer 
-	For x = 1 To 2
-		VoltDiff (Wind(x),1,mV2500C,1,True,0,_60Hz,0.08,-100)
-   	Next
-  
+	VoltDiff (Wind(), 2, mV2500C,1, True, 0, _60Hz, 0.08, -100 )
 	Windspeed = SQR(u^2 + v^2)
 
-	'DL CH 3-7
+	'DL CH 3-6
+	VoltDiff (RN_ref(), 4, mV250C, 3, True, 0, _60Hz, 1, 0)
+
+	'DL CH 7
 	'...
 
 EndSub
@@ -113,6 +134,7 @@ BeginProg
 		'Mux 
 		ReadMux
 		
-		CallTable (RnCAL)
+		CallTable RnCAL_sample
+		CallTable RnCAL_AVG
 	NextScan
 EndProg
