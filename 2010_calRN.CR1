@@ -21,13 +21,8 @@
 'Declare Public Variables ##############################################
 Public PTemp, BattV
 
-Public RN_ref(4)
-	Alias RN_ref(1)	= Long_1
-	Alias RN_ref(2) = Short_1
-	Alias RN_ref(3) = Long_2
-	Alias RN_ref(4) = Short_2	
-
-Public RN(24)
+Const RN_count = 28
+Public RN(RN_count)
 	Alias RN(1) 	= Q04032 'Net Radiometer Serial Numbers
 	Alias RN(2) 	= Q03017
 	Alias RN(3) 	= Q04033
@@ -52,9 +47,13 @@ Public RN(24)
 	Alias RN(22) 	= sn91236
 	Alias RN(23) 	= sn91228
 	Alias RN(24) 	= Q03050
+	Alias RN(25) 	= Short_1
+	Alias RN(26) 	= Long_1
+	Alias RN(27) 	= Short_2
+	Alias RN(28) 	= Long_2
 
-
-Public Wind(3)
+Const Wind_count = 3	
+Public Wind(Wind_count)
 	Alias Wind(1) 	= u
 	Alias Wind(2) 	= v
 	Alias Wind(3) 	= Windspeed
@@ -71,18 +70,16 @@ DataTable (RnCAL_sample,True,-1)
 	DataInterval (0,30,Sec,10) ' Save Sample Every 30 Seconds
 	Sample (1,BattV,FP2)
 	Sample (1,PTemp,FP2)
-	Sample (3, Wind(), IEEE4)
-	Sample (4, RN_ref(), IEEE4)
-	Sample (24, RN(), IEEE4)
+	Sample (Wind_count, Wind(), IEEE4)
+	Sample (RN_count, RN(), IEEE4)
 EndTable
 
 DataTable (RnCAL_AVG,True,-1)
 	DataInterval (0,10,min,10) ' Save Avg Every 10 Minutes
 	Average (1,BattV,FP2, False)
 	Average (1,PTemp,FP2, False)
-	Average (3, Wind(), IEEE4, False)
-	Average (4, RN_ref(), IEEE4, False)
-	Average (24, RN(), IEEE4, False)
+	Average (Wind_count, Wind(), IEEE4, False)
+	Average (RN_count, RN(), IEEE4, False)
 
 EndTable
 
@@ -96,10 +93,7 @@ Sub ReadDL
 	VoltDiff (Wind(), 2, mV2500C,1, True, 0, _60Hz, 0.08, -100 )
 	Windspeed = SQR(u^2 + v^2)
 
-	'DL CH 3-6
-	VoltDiff (RN_ref(), 4, mV250C, 3, True, 0, _60Hz, 1, 0)
-
-	'DL CH 7
+	'DL CH 3-7
 	'...
 
 EndSub
@@ -116,7 +110,16 @@ Sub ReadMux
 				'read MUX from DL Diff CH 8
 		Next
 		
-		'MUX CH 25-32
+		'MUX CH 25-28
+		'CNR2 Radiometers
+		For x = 25 To 28
+			PulsePort(2,10000) 'Switch mux CH with Clock CH
+			VoltDiff(RN(x),1,mV25C,8,True,0,_60Hz,1,0) 
+				'read MUX from DL Diff CH 8
+		Next
+		
+		
+		'MUX CH 29-32
 		'...
 	
 	PortSet(1,0) 'MUX off
