@@ -94,7 +94,6 @@ f.dw <- lm(
 
 dat[ind, sensor] <- dat[ind, sensor] * f.dw$coefficients[2]
 
-
 # Plot Fits
 fp1 <- xyplot(
 	as.formula(paste(sensor, "+ RN1~ TIMESTAMP")), 
@@ -110,9 +109,6 @@ fp2 <- xyplot(
 	type = "p", 
 	aspect = 1
 )
-
-
-
 
 # Produce Rolling Averages ############################################
 #library(zoo)
