@@ -62,7 +62,7 @@ Dim x
 
 Units BattV 	= Volts
 Units PTemp 	= C
-Units RN() 	= mV
+Units RN() 	  = mV
 Units Wind()	= m/s
 
 'Data Tables ###########################################################

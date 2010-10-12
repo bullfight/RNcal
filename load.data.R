@@ -35,6 +35,10 @@ dat$TIMESTAMP <- as.POSIXct(
 	tz 	= "UTC - 5"
 )
 
+# Indexing Vectors
+sensors <- names(dat)[8:31]
+index <- length(sensors)
+
 # Apply Calibrations to CNR2 Pyranometer and Pyrgeometer ##############
 # Sensor	Serial	Name	Calibration (μV/Wm2)
 # Pyranometer 	100237 	Short_1	16.03
@@ -49,11 +53,11 @@ l2c <- 1000 / 12.24
 
 dat$Short_1 <- 	dat$Short_1 * s1c
 dat$Long_1  <- 	dat$Long_1  * l1c
-dat$RN1 <- dat$Short_1 + dat$Long_1
+dat$RN1 		<- dat$Short_1 + dat$Long_1
 
 dat$Short_2 <- 	dat$Short_2 * s2c
 dat$Long_2  <- 	dat$Long_2  * l2c
-dat$RN2 <- dat$Short_2 + dat$Long_2
+dat$RN2 		<- dat$Short_2 + dat$Long_2
 
 xyplot(
 	RN1 ~ RN2, 
@@ -65,7 +69,7 @@ xyplot(
 
 # Generate Calibrations ###############################################
 
-# UP ####
+# UP ######
 f.up <- lm(RN1 ~ sn91234, dat[dat$sn91234 > 0,])
 dat$sn91234[dat$sn91234 > 0] <- 
 	dat$sn91234[dat$sn91234 > 0] * f.up$coefficients[2]
@@ -76,7 +80,13 @@ dat$sn91234[dat$sn91234 < 0] <-
 	dat$sn91234[dat$sn91234 < 0] * f.dw$coefficients[2]
 
 
-
+xyplot(
+	sn91234 + RN1 + RN2 ~ TIMESTAMP, 
+	data = dat, 
+	groups = format(TIMESTAMP, "%j"), 
+	type = "l", 
+	aspect = 1
+)
 
 
 
