@@ -27,4 +27,4 @@ Set Up
 
 ![Source](http://github.com/bullfight/RNcal/raw/master/images/rn2.JPG "net radiometers in plane")
 
-![Source](http://github.com/bullfight/RNcal/raw/master/images/rn2.JPG "inclusion of 2-axis sonic anemometer")
+![Source](http://github.com/bullfight/RNcal/raw/master/images/rn3.JPG "inclusion of 2-axis sonic anemometer")
