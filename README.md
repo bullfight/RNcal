@@ -22,7 +22,6 @@ Set Up
 * new thermopile shields
 
 ![Source](http://github.com/bullfight/RNcal/raw/master/images/rn.JPG "Calibration Setup")
-
 ![Source](http://github.com/bullfight/RNcal/raw/master/images/rn1.JPG "Q7 and CNR2 Net Radiometer")
 
 ![Source](http://github.com/bullfight/RNcal/raw/master/images/rn2.JPG "net radiometers in plane")
