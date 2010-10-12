@@ -69,7 +69,6 @@ p1 <- xyplot(
 	aspect = 1
 )
 
-
 # Generate Calibrations ###############################################
 sensor 	<- "sn91234"
 vect 		<- dat[,sensor]
