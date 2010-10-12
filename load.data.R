@@ -59,47 +59,67 @@ dat$Short_2 <- 	dat$Short_2 * s2c
 dat$Long_2  <- 	dat$Long_2  * l2c
 dat$RN2 		<- dat$Short_2 + dat$Long_2
 
-xyplot(
+p1 <- xyplot(
 	RN1 ~ RN2, 
+	data = dat, 
+	groups = format(TIMESTAMP, "%j"), 
+	xlim = range(dat$RN2),
+	ylim = range(dat$RN1),
+	type = "p", 
+	aspect = 1
+)
+
+
+# Generate Calibrations ###############################################
+sensor 	<- "sn91234"
+vect 		<- dat[,sensor]
+
+# UP ################################
+ind <- which(vect > 0 & !is.na(vect))
+
+f.up <- lm(
+	as.formula(paste("RN1 ~", sensor)),
+	dat[ind,]
+)
+
+dat[ind, sensor] <- dat[ind, sensor] * f.up$coefficients[2]
+
+# DOWN ##############################
+ind <- which(vect < 0 & !is.na(vect))
+
+f.dw <- lm(
+	as.formula(paste("RN1 ~", sensor)), 
+	dat[ind,]
+)
+
+dat[ind, sensor] <- dat[ind, sensor] * f.dw$coefficients[2]
+
+
+# Plot Fits
+fp1 <- xyplot(
+	as.formula(paste(sensor, "+ RN1~ TIMESTAMP")), 
+	data = dat, 
+	type = "l", 
+	aspect = 1
+)
+
+fp2 <- xyplot(
+	as.formula(paste("RN1 ~ ", sensor)), 
 	data = dat, 
 	groups = format(TIMESTAMP, "%j"), 
 	type = "p", 
 	aspect = 1
 )
 
-# Generate Calibrations ###############################################
-
-# UP ######
-f.up <- lm(RN1 ~ sn91234, dat[dat$sn91234 > 0,])
-dat$sn91234[dat$sn91234 > 0] <- 
-	dat$sn91234[dat$sn91234 > 0] * f.up$coefficients[2]
-
-# DOWN ####
-f.dw <- lm(RN1 ~ sn91234, dat[dat$sn91234 < 0,])
-dat$sn91234[dat$sn91234 < 0] <- 
-	dat$sn91234[dat$sn91234 < 0] * f.dw$coefficients[2]
-
-
-xyplot(
-	sn91234 + RN1 + RN2 ~ TIMESTAMP, 
-	data = dat, 
-	groups = format(TIMESTAMP, "%j"), 
-	type = "l", 
-	aspect = 1
-)
-
-
-
 
 
 
 # Produce Rolling Averages ############################################
-library(zoo)
+#library(zoo)
 
-vals <- as.matrix(dat[3:37], rownames.force = T)
-vals <- as.matrix(dat[3:dim(dat)[2]], rownames.force = T)
-dat.ts <- zoo(vals, dat$TIMESTAMP)
+#vals <- as.matrix(dat[3:37], rownames.force = T)
+#vals <- as.matrix(dat[3:dim(dat)[2]], rownames.force = T)
+#dat.ts <- zoo(vals, dat$TIMESTAMP)
 
-m.dat <- rollmean(dat.ts,30, na.pad = T, align = "right")
-
+#m.dat <- rollmean(dat.ts,30, na.pad = T, align = "right")
 #######################################################################
