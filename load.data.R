@@ -35,10 +35,6 @@ dat$TIMESTAMP <- as.POSIXct(
 	tz 	= "UTC - 5"
 )
 
-# Indexing Vectors
-sensors <- names(dat)[8:31]
-index <- length(sensors)
-
 # Apply Calibrations to CNR2 Pyranometer and Pyrgeometer ##############
 # Sensor	Serial	Name	Calibration (μV/Wm2)
 # Pyranometer 	100237 	Short_1	16.03
@@ -70,44 +66,66 @@ p1 <- xyplot(
 )
 
 # Generate Calibrations ###############################################
-sensor 	<- "sn91234"
-vect 		<- dat[,sensor]
 
-# UP ################################
-ind <- which(vect > 0 & !is.na(vect))
+# Indexing Vectors
+sensors <- names(dat)[8:31]
+index <- length(sensors)
 
-f.up <- lm(
-	as.formula(paste("RN1 ~", sensor)),
-	dat[ind,]
-)
+for(sensor in sensors){
 
-dat[ind, sensor] <- dat[ind, sensor] * f.up$coefficients[2]
+	#Selected Sensor Vector
+	vect 		<- dat[,sensor]
 
-# DOWN ##############################
-ind <- which(vect < 0 & !is.na(vect))
+	# UP Fit ############################
+	ind <- which(vect > 0 & !is.na(vect))
 
-f.dw <- lm(
-	as.formula(paste("RN1 ~", sensor)), 
-	dat[ind,]
-)
+	f.up <- lm(
+		as.formula(paste("RN1 ~", sensor)),
+		dat[ind,]
+	)
 
-dat[ind, sensor] <- dat[ind, sensor] * f.dw$coefficients[2]
+	dat[ind, sensor] <- dat[ind, sensor] * f.up$coefficients[2]
 
-# Plot Fits
-fp1 <- xyplot(
-	as.formula(paste(sensor, "+ RN1~ TIMESTAMP")), 
-	data = dat, 
-	type = "l", 
-	aspect = 1
-)
+	# DOWN Fit ##########################
+	ind <- which(vect < 0 & !is.na(vect))
 
-fp2 <- xyplot(
-	as.formula(paste("RN1 ~ ", sensor)), 
-	data = dat, 
-	groups = format(TIMESTAMP, "%j"), 
-	type = "p", 
-	aspect = 1
-)
+	f.dw <- lm(
+		as.formula(paste("RN1 ~", sensor)), 
+		dat[ind,]
+	)
+
+	dat[ind, sensor] <- dat[ind, sensor] * f.dw$coefficients[2]
+
+	# Windspeed Correction 
+	
+	# UP
+	CF.up <- 1 + {
+		(0.066 * 0.2 * dat$Windspeed) / 
+		(0.066 +  (0.2 * dat$Windspeed))
+	}
+	
+	# DOWN
+	
+	CF.dw <- (0.00174 * dat$Windspeed) + 0.99755
+
+
+	# Plot Fits
+	fp1 <- xyplot(
+		as.formula(paste(sensor, "+ RN1~ TIMESTAMP")), 
+		data = dat, 
+		type = "l", 
+		aspect = 1
+	)
+
+	fp2 <- xyplot(
+		as.formula(paste("RN1 ~ ", sensor)), 
+		data = dat, 
+		groups = format(TIMESTAMP, "%j"), 
+		type = "p", 
+		aspect = 1
+	)
+
+}
 
 # Produce Rolling Averages ############################################
 #library(zoo)
