@@ -57,58 +57,23 @@ rm(sensors.not.installed)
 # Pyranometer 	100239 	Short_1	15.89
 # Pyrgeometer	100239	Long_1	12.24
 
-s1c <- 1000 / 16.03
-l1c <- 1000 / 12.47
-s2c <- 1000 / 15.89
-l2c <- 1000 / 12.24
+source("functions/cnr2.cal.R")
 
-dat$Short_1	<- dat$Short_1 * s1c
-dat$Long_1	<- dat$Long_1  * l1c
+dat$Short_1 	<- cnr2.cal(dat$Short_1, 16.03)
+dat$Long_1 	<- cnr2.cal(dat$Long_1, 12.47)
 dat$RN1 <- dat$Short_1 + dat$Long_1
 
-dat$Short_2	<- dat$Short_2 * s2c
-dat$Long_2	<- dat$Long_2  * l2c
+dat$Short_2	<- cnr2.cal(dat$Short_2, 15.89)
+dat$Long_3	<- cnr2.cal(dat$Long_3, 12.24)
 dat$RN2 <- dat$Short_2 + dat$Long_2
 
 dat$RN <- (dat$RN1 + dat$RN2) / 2
 
-rm(s1c, l1c, s2c, l2c)
 # Windspeed Correction ################################################
 # According to the manual for the Q7.1 from Campbell Scientific, 
 # a correction factor of the following form must be added to the 
 # calibrated measure of RN to account for convective cooling as air 
 # moves past the sensors
-
-# Plot Correction Calibration Factor in response to U'
-u	<- seq(0, 7, .01)
-cf.up	<- 1 + { (0.066 * 0.2 * u) / (0.066 +  (0.2 * u)) }
-cf.dw	<- (0.00174 * u) + 0.99755
-
-pdf("PLOTS/uCF.pdf")
-	xyplot(
-	x 	= cf.up + cf.dw ~ u, 
-	type 	= "l", 
-	lty 	= c(1,2),
-	col 	= "black",
-	ylim 	= c(.98, 1.08),
-	xlim 	= c(-.05, 7),
-	ylab 	= "Correction Factor [W/m-2]",
-	xlab 	= "Windspeed [m/s]",
-	aspect 	= .5,
-	main 	= "Correction factor for Windspeed",
-	key 	= list(
-			lines	= T, 
-			text	= list(
-				c(
-				"Positive Fluxes", 
-				"Negative Fluxes"
-				)
-			),
-			lty	= c(1,2)
-	)
-)
-dev.off()
-
 
 # Calculate Windspeed Correction Factor
 source("functions/cf.u.R")
@@ -118,7 +83,7 @@ CF <- cf.u(dat$Windspeed, dat$RN)
 # which will generate convective cooling on target RNs
 dat$RN <- dat$RN * (1/CF)
 
-rm(CF, u, cf.up, cf.dw)
+rm(CF)
 # Generate Calibrations ###############################################
 source("functions/fit.RN.R")
 
