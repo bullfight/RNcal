@@ -13,11 +13,14 @@
 # RnCAL_sample.dat 	(2 hz)
 # RnCAL_AVG.dat 	(10 minute)
 
+# Setup and leveling completed on DOY 284, 2010
+
 # cd ~/Dropbox/2010.FieldMeasures/DL_code/
 setwd("~/Dropbox/2010.FieldMeasures/DL_code/")
 rm(list = ls())
 
 # Load Data ###########################################################
+
 # RnCAL_sample.dat
 dat <- read.csv("data/RnCAL_sample.dat", 
 	skip = 1,
@@ -32,9 +35,21 @@ dat <- dat[3: dim(dat)[1], ]
 dat$TIMESTAMP <- as.POSIXct(
 	x 	= dat$TIMESTAMP, 
 	origin 	= "1960-01-01", 
-	tz 	= "UTC - 5"
+	tz 	= "UTC-5"
+)
+unique(format(dat$TIMESTAMP, "%j"))
+
+# Indexing Vectors
+sensors.not.installed <- c("sn91227", "Q98194", "sn91170", "sn91229", 
+		   "sn91231", "sn91236", "Q03050"
 )
 
+dat <-	dat[format(dat$TIMESTAMP, "%j") > 284, 
+	!(names(dat) %in% sensors.not.installed) ]
+
+installed.sensors <- names(dat)[8:24]
+
+rm(sensors.not.installed)
 # Apply Calibrations to CNR2 Pyranometer and Pyrgeometer ##############
 # Sensor	Serial	Name	Calibration (μV/Wm2)
 # Pyranometer 	100237 	Short_1	16.03
@@ -47,92 +62,77 @@ l1c <- 1000 / 12.47
 s2c <- 1000 / 15.89
 l2c <- 1000 / 12.24
 
-dat$Short_1 <- 	dat$Short_1 * s1c
-dat$Long_1  <- 	dat$Long_1  * l1c
-dat$RN1 		<- dat$Short_1 + dat$Long_1
+dat$Short_1	<- dat$Short_1 * s1c
+dat$Long_1	<- dat$Long_1  * l1c
+dat$RN1 <- dat$Short_1 + dat$Long_1
 
-dat$Short_2 <- 	dat$Short_2 * s2c
-dat$Long_2  <- 	dat$Long_2  * l2c
-dat$RN2 		<- dat$Short_2 + dat$Long_2
+dat$Short_2	<- dat$Short_2 * s2c
+dat$Long_2	<- dat$Long_2  * l2c
+dat$RN2 <- dat$Short_2 + dat$Long_2
 
-p1 <- xyplot(
-	RN1 ~ RN2, 
-	data = dat, 
-	groups = format(TIMESTAMP, "%j"), 
-	xlim = range(dat$RN2),
-	ylim = range(dat$RN1),
-	type = "p", 
-	aspect = 1
+dat$RN <- (dat$RN1 + dat$RN2) / 2
+
+rm(s1c, l1c, s2c, l2c)
+# Windspeed Correction ################################################
+# According to the manual for the Q7.1 from Campbell Scientific, 
+# a correction factor of the following form must be added to the 
+# calibrated measure of RN to account for convective cooling as air 
+# moves past the sensors
+
+# Plot Correction Calibration Factor in response to U'
+u	<- seq(0, 7, .01)
+cf.up	<- 1 + { (0.066 * 0.2 * u) / (0.066 +  (0.2 * u)) }
+cf.dw	<- (0.00174 * u) + 0.99755
+
+pdf("PLOTS/uCF.pdf")
+	xyplot(
+	x 	= cf.up + cf.dw ~ u, 
+	type 	= "l", 
+	lty 	= c(1,2),
+	col 	= "black",
+	ylim 	= c(.98, 1.08),
+	xlim 	= c(-.05, 7),
+	ylab 	= "Correction Factor [W/m-2]",
+	xlab 	= "Windspeed [m/s]",
+	aspect 	= .5,
+	main 	= "Correction factor for Windspeed",
+	key 	= list(
+			lines	= T, 
+			text	= list(
+				c(
+				"Positive Fluxes", 
+				"Negative Fluxes"
+				)
+			),
+			lty	= c(1,2)
+	)
 )
+dev.off()
 
+
+# Calculate Windspeed Correction Factor
+source("functions/cf.u.R")
+CF <- cf.u(dat$Windspeed, dat$RN)
+
+# Remove Effect of Windspeed from Reference RN
+# which will generate convective cooling on target RNs
+dat$RN <- dat$RN * (1/CF)
+
+rm(CF, u, cf.up, cf.dw)
 # Generate Calibrations ###############################################
+source("functions/fit.RN.R")
 
-# Indexing Vectors
-sensors <- names(dat)[8:31]
-index <- length(sensors)
+fits <- data.frame()
 
-for(sensor in sensors){
-
-	#Selected Sensor Vector
-	vect 		<- dat[,sensor]
-
-	# UP Fit ############################
-	ind <- which(vect > 0 & !is.na(vect))
-
-	f.up <- lm(
-		as.formula(paste("RN1 ~", sensor)),
-		dat[ind,]
-	)
-
-	dat[ind, sensor] <- dat[ind, sensor] * f.up$coefficients[2]
-
-	# DOWN Fit ##########################
-	ind <- which(vect < 0 & !is.na(vect))
-
-	f.dw <- lm(
-		as.formula(paste("RN1 ~", sensor)), 
-		dat[ind,]
-	)
-
-	dat[ind, sensor] <- dat[ind, sensor] * f.dw$coefficients[2]
-
-	# Windspeed Correction 
+for(sensor in installed.sensors){
+	out <- fit.RN(dat, sensor)
 	
-	# UP
-	CF.up <- 1 + {
-		(0.066 * 0.2 * dat$Windspeed) / 
-		(0.066 +  (0.2 * dat$Windspeed))
-	}
-	
-	# DOWN
-	
-	CF.dw <- (0.00174 * dat$Windspeed) + 0.99755
-
-
-	# Plot Fits
-	fp1 <- xyplot(
-		as.formula(paste(sensor, "+ RN1~ TIMESTAMP")), 
-		data = dat, 
-		type = "l", 
-		aspect = 1
-	)
-
-	fp2 <- xyplot(
-		as.formula(paste("RN1 ~ ", sensor)), 
-		data = dat, 
-		groups = format(TIMESTAMP, "%j"), 
-		type = "p", 
-		aspect = 1
-	)
-
+	fits <- rbind(fits, out$vals)
 }
 
-# Produce Rolling Averages ############################################
-#library(zoo)
+write.csv( 
+	x = fits, 
+	file = "OUTPUT/fits.csv"
+)	
 
-#vals <- as.matrix(dat[3:37], rownames.force = T)
-#vals <- as.matrix(dat[3:dim(dat)[2]], rownames.force = T)
-#dat.ts <- zoo(vals, dat$TIMESTAMP)
 
-#m.dat <- rollmean(dat.ts,30, na.pad = T, align = "right")
-#######################################################################
