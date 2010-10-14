@@ -1,0 +1,95 @@
+%  Created by Pat Schmitz on 2010-06-30.
+%  Copyright (c) 2010 All rights reserved.
+%
+% HEADER %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{geometry,setspace,listings,ifpdf,paralist}
+\usepackage{Sweave}
+\usepackage{float}
+
+\geometry{ left = 1in, right = 1in, top = .7in, bottom = .7in}
+
+% TITLE DATA  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{\Sexpr{paste(sensor,  "Calibration Card") } }
+\author{\Sexpr{paste("Patrick Schmitz")}}
+
+\begin{document}
+\maketitle
+\setkeys{Gin}{width=1\textwidth}
+
+
+% BEGIN MAIN TEXT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Net Radiometer Calibrations}
+<<Print Cals, echo=FALSE, results=tex>>=
+
+library(xtable)
+tab <- xtable(out$vals, caption = "Fit Calibrations")
+print(tab)
+
+@
+
+\section{Positive Fluxes}
+
+<<Print pos, echo=FALSE, results=tex>>=
+tab <- xtable(
+	summary(out$f.pos), 
+	caption = "Positive Flux Fit Estimates",
+	table.placement="!h",
+	size = "small"
+)
+print(tab)
+
+tab <- xtable(
+	anova(out$f.pos), 
+	caption = "Positive Flux ANOVA",
+	table.placement="!h",
+	size = "small"
+)
+print(tab)
+@
+
+% section positive_fluxes (end)
+
+
+\section{Negative Fluxes}
+
+<<Print neg, echo=FALSE, results=tex>>=
+tab <- xtable(
+	summary(out$f.neg), 
+	caption = "Negative Flux Fit Estimates",
+	table.placement="!h",
+	size = "small"
+)
+print(tab,table.placement="H")
+
+tab <- xtable(
+	anova(out$f.neg), 
+	caption = "Negative Flux ANOVA",
+	table.placement="!h",
+	size = "small"
+)
+print(tab)
+@
+
+
+\section{Fit Plots}
+\begin{center}
+
+<<fig=TRUE, echo=FALSE>>=
+print(rn.ctrl, floating=FALSE)
+@
+
+<<fig=TRUE, echo=FALSE>>=
+print(out$p.fit, floating=FALSE)
+@
+
+<<fig=TRUE, echo=FALSE>>=
+print(out$p.reg, floating=FALSE)
+@
+\end{center}
+
+
+\end{document}

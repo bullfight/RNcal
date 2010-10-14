@@ -3,7 +3,7 @@
 cf.u <- function(Windspeed, RN){
 	CF <- rep(NA, length(Windspeed))
 
-	# UP #######
+	# POS #######
 	ind <- which(RN > 0)
 	CF[ind] <- 1 + 
 		{
@@ -11,7 +11,7 @@ cf.u <- function(Windspeed, RN){
 		(0.066 +  (0.2 * Windspeed[ind]))
 		}
 
-	# DOWN ####
+	# NEG ####
 	ind <- which(RN < 0)
 	CF[ind] <- (0.00174 * Windspeed[ind]) + 0.99755
 	rm(ind)
@@ -22,12 +22,12 @@ cf.u <- function(Windspeed, RN){
 # Plot Correction Calibration Factor in response to U'
 plot.response <- function(){
 u	<- seq(0, 7, .01)
-cf.up	<- 1 + { (0.066 * 0.2 * u) / (0.066 +  (0.2 * u)) }
-cf.dw	<- (0.00174 * u) + 0.99755
+cf.pos	<- 1 + { (0.066 * 0.2 * u) / (0.066 +  (0.2 * u)) }
+cf.neg	<- (0.00174 * u) + 0.99755
 
 
 p <- xyplot(
-	x 	= cf.up + cf.dw ~ u, 
+	x 	= cf.pos + cf.neg ~ u, 
 	type 	= "l", 
 	lty 	= c(1,2),
 	col 	= "black",

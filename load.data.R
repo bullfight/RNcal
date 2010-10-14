@@ -37,7 +37,7 @@ dat$TIMESTAMP <- as.POSIXct(
 	origin 	= "1960-01-01", 
 	tz 	= "UTC-5"
 )
-unique(format(dat$TIMESTAMP, "%j"))
+#unique(format(dat$TIMESTAMP, "%j"))
 
 # Indexing Vectors
 sensors.not.installed <- c("sn91227", "Q98194", "sn91170", "sn91229", 
@@ -59,15 +59,29 @@ rm(sensors.not.installed)
 
 source("functions/cnr2.cal.R")
 
-dat$Short_1 	<- cnr2.cal(dat$Short_1, 16.03)
-dat$Long_1 	<- cnr2.cal(dat$Long_1, 12.47)
+dat$Short_1 <- cnr2.cal(dat$Short_1, 16.03)
+dat$Long_1 <- cnr2.cal(dat$Long_1, 12.47)
 dat$RN1 <- dat$Short_1 + dat$Long_1
 
-dat$Short_2	<- cnr2.cal(dat$Short_2, 15.89)
-dat$Long_3	<- cnr2.cal(dat$Long_3, 12.24)
+dat$Short_2 <- cnr2.cal(dat$Short_2, 15.89)
+dat$Long_2 <- cnr2.cal(dat$Long_2, 12.24)
 dat$RN2 <- dat$Short_2 + dat$Long_2
 
 dat$RN <- (dat$RN1 + dat$RN2) / 2
+
+rn.ctrl <- xyplot(
+	x = Short_1 + Short_2 + Long_1 + Long_2 ~ TIMESTAMP, 
+	data = dat, 
+	auto.key = list(T, points = F, lines = T),
+	type = "l", 
+	aspect = 1,
+	main = "Reference Measurements",
+	xlab = "Time",
+	ylab = "[W/m-2]"
+)
+
+
+#plot(dat$RN)
 
 # Windspeed Correction ################################################
 # According to the manual for the Q7.1 from Campbell Scientific, 
@@ -87,17 +101,38 @@ rm(CF)
 # Generate Calibrations ###############################################
 source("functions/fit.RN.R")
 
-fits <- data.frame()
+calibrations <- data.frame()
 
 for(sensor in installed.sensors){
 	out <- fit.RN(dat, sensor)
 	
-	fits <- rbind(fits, out$vals)
+	calibrations <- rbind(calibrations, out$vals)
+	
+	# Generate Calibration Card
+	Sweave("calcard.Snw")
+	library(tools)
+	texi2dvi("calcard.tex",  pdf = TRUE)
+
+	name <- paste("2010_", sensor, "_calibration.pdf", sep="")
+	file.rename("calcard.pdf", name)
+	file.copy(
+		from = name, 
+		to = paste("OUTPUT/calibrationcards/", sep=""), 
+		overwrite = T
+	)	
+	file.remove(c(list.files(pattern=".pdf"), 
+		list.files(pattern=".eps"), 
+		list.files(pattern=".log"), 
+		list.files(pattern=".aux"), 
+		list.files(pattern=".tex")
+		)
+	)
+	
 }
 
 write.csv( 
-	x = fits, 
-	file = "OUTPUT/fits.csv"
+	x = calibrations, 
+	file = "OUTPUT/2010.calibrations.csv"
 )	
 
 
