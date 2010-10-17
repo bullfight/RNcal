@@ -57,9 +57,9 @@ fit.RN <- function(dat, sensor){
 	
 	fits <- list(
 		vals = data.frame(
-			sensor = sensor,
-			pos = f.pos$coefficients[[2]],
-			neg = f.neg$coefficients[[2]]
+			Serial = sensor,
+			Pos = f.pos$coefficients[[2]],
+			Neg = f.neg$coefficients[[2]]
 		),
 		f.pos = f.pos,
 		f.neg = f.neg,

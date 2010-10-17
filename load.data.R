@@ -70,18 +70,48 @@ dat$RN2 <- dat$Short_2 + dat$Long_2
 dat$RN <- (dat$RN1 + dat$RN2) / 2
 
 rn.ctrl <- xyplot(
-	x = Short_1 + Short_2 + Long_1 + Long_2 ~ TIMESTAMP, 
+	x = Short_1 + Short_2 + Long_1 + Long_2 ~ TIMESTAMP,
+	data = dat,
+	auto.key = list(T, points = F, lines = T),
+	type = "l", 
+	main = "Reference Measurements",
+	xlab = "Time",
+	ylab = "[W/m-2]"
+)
+
+shrt <- xyplot(
+	x = Short_1  ~ Short_2, 
+	data = dat, 
+	auto.key = list(T, points = F, lines = T),
+	type = "p", 
+	aspect = 1,
+	main = "Short Wave",
+	xlab = "CNR2 : 100239",
+	ylab = "CHR2 : 100237"
+)
+
+long <- xyplot(
+	x = Long_1  ~ Long_2, 
+	data = dat, 
+	auto.key = list(T, points = F, lines = T),
+	type = "p", 
+	aspect = 1,
+	main = "Long Wave",
+	xlab = "CNR2 : 100239",
+	ylab = "CHR2 : 100237"
+)
+
+p.rn <- xyplot(
+	x = RN + RN1 + RN2 ~ TIMESTAMP, 
 	data = dat, 
 	auto.key = list(T, points = F, lines = T),
 	type = "l", 
-	aspect = 1,
 	main = "Reference Measurements",
 	xlab = "Time",
 	ylab = "[W/m-2]"
 )
 
 
-#plot(dat$RN)
 
 # Windspeed Correction ################################################
 # According to the manual for the Q7.1 from Campbell Scientific, 
@@ -117,10 +147,12 @@ for(sensor in installed.sensors){
 	file.rename("calcard.pdf", name)
 	file.copy(
 		from = name, 
-		to = paste("OUTPUT/calibrationcards/", sep=""), 
+		to = paste("OUTPUT/calibrationcards2/", sep=""), 
 		overwrite = T
 	)	
-	file.remove(c(list.files(pattern=".pdf"), 
+	file.remove(
+		c(
+		list.files(pattern=".pdf"), 
 		list.files(pattern=".eps"), 
 		list.files(pattern=".log"), 
 		list.files(pattern=".aux"), 
@@ -132,7 +164,6 @@ for(sensor in installed.sensors){
 
 write.csv( 
 	x = calibrations, 
-	file = "OUTPUT/2010.calibrations.csv"
-)	
-
-
+	file = "OUTPUT/2010.calibrations2.csv",
+	row.names = F
+)
