@@ -44,7 +44,9 @@ sensors.not.installed <- c("sn91227", "Q98194", "sn91170", "sn91229",
 		   "sn91231", "sn91236", "Q03050"
 )
 
-dat <-	dat[format(dat$TIMESTAMP, "%j") > 284, 
+DOY <- format(dat$TIMESTAMP, "%j")
+
+dat <-	dat[DOY > 284 & DOY < 291, 
 	!(names(dat) %in% sensors.not.installed) ]
 
 installed.sensors <- names(dat)[8:24]
@@ -147,7 +149,7 @@ for(sensor in installed.sensors){
 	file.rename("calcard.pdf", name)
 	file.copy(
 		from = name, 
-		to = paste("OUTPUT/calibrationcards2/", sep=""), 
+		to = paste("OUTPUT/calibrationcards3/", sep=""), 
 		overwrite = T
 	)	
 	file.remove(
@@ -164,6 +166,6 @@ for(sensor in installed.sensors){
 
 write.csv( 
 	x = calibrations, 
-	file = "OUTPUT/2010.calibrations2.csv",
+	file = "OUTPUT/2010.calibrations3.csv",
 	row.names = F
 )

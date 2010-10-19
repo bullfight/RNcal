@@ -16,21 +16,21 @@ fit.RN <- function(dat, sensor){
 	ind	<- which(vect > 0 & !is.na(vect))
 
 	f.pos	<- lm(
-		as.formula(paste("RN ~", sensor)),
+		as.formula(paste("RN ~ 0 + ", sensor)),
 		dat[ind,]
 	)
-
-	dat[ind, sensor] <- dat[ind, sensor] * f.pos$coefficients[[2]]
+		
+	dat[ind, sensor] <- dat[ind, sensor] * f.pos$coefficients[[1]]
 
 	# Negative Flux Fit ##########################
 	ind <- which(vect < 0 & !is.na(vect))
 
 	f.neg <- lm(
-		as.formula(paste("RN ~", sensor)), 
+		as.formula(paste("RN ~ 0 + ", sensor)), 
 		dat[ind,]
 	)
 
-	dat[ind, sensor] <- dat[ind, sensor] * f.neg$coefficients[[2]]
+	dat[ind, sensor] <- dat[ind, sensor] * f.neg$coefficients[[1]]
 
 	# Plot Fits
 	fp1 <- xyplot(
@@ -38,7 +38,6 @@ fit.RN <- function(dat, sensor){
 		data = dat, 
 		auto.key = list(T, points = F, lines = T),
 		type = "l", 
-		aspect = 1,
 		main = "Fit Response",
 		xlab = "Time",
 		ylab = "[W/m-2]"
@@ -51,15 +50,22 @@ fit.RN <- function(dat, sensor){
 		groups = format(TIMESTAMP, "%j"), 
 		type = "p", 
 		aspect = 1,
-		main = "Fit by Day of Year"
+		main = "Fit by Day of Year",
+		xlim = c(-100, 600),
+		ylim = c(-100, 600),
+		panel = function(...){ 
+			panel.grid(h=-1,v=-1) 
+			panel.xyplot(...) 
+			panel.abline(a = 0, b = 1) 
+		}
 	)
 		
 	
 	fits <- list(
 		vals = data.frame(
 			Serial = sensor,
-			Pos = f.pos$coefficients[[2]],
-			Neg = f.neg$coefficients[[2]]
+			Pos = f.pos$coefficients[[1]],
+			Neg = f.neg$coefficients[[1]]
 		),
 		f.pos = f.pos,
 		f.neg = f.neg,
