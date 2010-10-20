@@ -8,4 +8,4 @@
 #m.dat <- rollmean(dat.ts,30, na.pad = T, align = "right")
 #######################################################################
 
-x = head(time(m.dat))
+#x = head(time(m.dat))

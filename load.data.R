@@ -19,6 +19,20 @@
 setwd("~/Dropbox/2010.FieldMeasures/DL_code/")
 rm(list = ls())
 
+# Libraries needed to run this script
+library(lattice)
+library(tools)
+
+# To produce the calibration cards you must have the typesetting engine
+# LaTeX installed on your system, and acessaible by Sweave, the R-library
+# which incorporates R and LaTeX code
+# details can be found by the query
+# http://www.google.com/search?sourceid=chrome&ie=UTF-8&q=setup+Sweave+and+latex+on+osx
+# setup for OS X
+# http://lifeasclay.wordpress.com/2010/03/21/learning-r-using-sweave-on-a-os-x-10-6/
+# For windows, just download mikTeX
+# http://www.miktex.org/2.9/setup
+
 # Load Data ###########################################################
 
 # RnCAL_sample.dat

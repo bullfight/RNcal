@@ -6,6 +6,7 @@ Files
 * 2010_calRN.CR1 - datalogger source file for recording mV from 26 radiometers, a sonic anemometer
 * 2010_calRN.tdf - binary for datalogger measures
 * load.data.R - script to infile recorded data by datalogger, generate calibrations, and produce calibration cards.
+* calcard.Snw - this is a Sweave file, mixed LaTeX and R code, which generates the calibration card using the typesetting engine LaTeX.  To generate these documents you must have a latex typesetting engine installed.  Details are included in the script load.data.R
 
 Calibration Setup
 -----------------
