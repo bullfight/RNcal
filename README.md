@@ -7,6 +7,7 @@ Files
 * 2010_calRN.tdf - binary for datalogger measures
 * load.data.R - script to infile recorded data by datalogger, generate calibrations, and produce calibration cards.
 * calcard.Snw - this is a Sweave file, mixed LaTeX and R code, which generates the calibration card using the typesetting engine LaTeX.  To generate these documents you must have a latex typesetting engine installed.  Details are included in the script load.data.R
+* OUTPUT/calibrationcards3/2010_Q01299_calibration.pdf - example calibration card
 
 Calibration Setup
 -----------------
